@@ -1,0 +1,44 @@
+/**:
+  ros__parameters:
+    trajectory_polygon_collision_check:
+      decimate_trajectory_step_length: 0.05
+      goal_extended_trajectory_length: 0.2
+
+    pointcloud_preprocessing:
+      filter_by_trajectory_polygon:
+        min_trajectory_length: 0.2
+        lateral_margin: 0.30
+      downsample_by_voxel_grid:
+        # Also enables the planner's processed-pointcloud debug output.  A
+        # 5-cm voxel still leaves several points on the 28-cm obstacle face.
+        enable_downsample: true
+      euclidean_clustering:
+        cluster_tolerance: 0.15
+
+    obstacle_stop:
+      stop_planning:
+        stop_margin: 0.15
+        terminal_stop_margin: 0.15
+        min_behavior_stop_margin: 0.15
+        # The RC course is only 1.8 m long.  Confirm the persistent Webots
+        # point immediately instead of using the full-size vehicle debounce.
+        min_on_duration: 0.0
+        min_off_duration: 30.0
+        update_distance_th: 0.05
+      obstacle_filtering:
+        # The upstream default disables inside-trajectory checks for raw
+        # pointcloud objects.  This experiment intentionally uses the Webots
+        # LiDAR as the ObstacleStopModule source, so enable that path.
+        check_inside:
+          pointcloud: true
+        trim_trajectory:
+          min_trajectory_length: 0.2
+        # Keep the stationary obstacle latched across short point-cloud/TF
+        # dropouts after the vehicle reaches zero speed.
+        stop_obstacle_hold_time_threshold: 30.0
+      pointcloud_segmentation:
+        velocity_estimation:
+          # The simulator supplies stable, ground-removed points.  One sample
+          # prevents the car travelling most of this short course while the
+          # production default accumulates five velocity observations.
+          required_velocity_count: 1

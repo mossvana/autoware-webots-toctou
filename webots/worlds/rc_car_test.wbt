@@ -1,0 +1,291 @@
+#VRML_SIM R2025a utf8
+
+WorldInfo {
+  basicTimeStep 32
+}
+
+Viewpoint {
+  # Same viewing direction as the original batch world, shifted so that
+  # the vehicle at the origin stays in frame.
+  orientation 0.024141113933403874 -0.02021225573782923 -0.9995042127655305 4.535083234772593
+  position 0.16 -2.66 0.5
+}
+
+Background {
+  skyColor [
+    0.75 0.85 1
+  ]
+}
+
+DirectionalLight {
+  direction -1 -1 -2
+  intensity 1
+}
+
+# Plain floor: no external RectangleArena PROTO is required.
+Solid {
+  translation 0 0 -0.025
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.45 0.45 0.45
+        roughness 1
+        metalness 0
+      }
+      geometry Box {
+        size 6 6 0.05
+      }
+    }
+  ]
+  name "floor"
+  boundingObject Box {
+    size 6 6 0.05
+  }
+}
+
+Robot {
+  translation 0 0 0.1
+  children [
+    DistanceSensor {
+      translation 0.16 0 0
+      name "front_distance"
+      lookupTable [
+        0 0 0
+        2 2 0
+      ]
+      type "laser"
+      aperture 0.01
+    }
+    GPS {
+      name "gps"
+    }
+    InertialUnit {
+      name "imu"
+    }
+    Gyro {
+      name "gyro"
+    }
+    Accelerometer {
+      name "accelerometer"
+    }
+
+    # Front-left: axis 1 steers around Z, axis 2 rolls around Y.
+    Hinge2Joint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.11 0.105 -0.05
+      }
+      jointParameters2 JointParameters {
+        axis 0 1 0
+      }
+      device [
+        RotationalMotor {
+          name "front_left_steer"
+          maxVelocity 4
+          minPosition -0.6
+          maxPosition 0.6
+          maxTorque 2
+        }
+        PositionSensor {
+          name "front_left_steer_sensor"
+        }
+      ]
+      device2 [
+        RotationalMotor {
+          name "front_left_motor"
+          maxVelocity 20
+          maxTorque 5
+        }
+        PositionSensor {
+          name "front_left_wheel_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.11 0.105 -0.05
+        rotation 1 0 0 1.57079632679
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.03 0.03 0.03
+              roughness 0.8
+            }
+            geometry Cylinder {
+              height 0.03
+              radius 0.05
+            }
+          }
+        ]
+        name "front_left_wheel"
+        boundingObject Cylinder {
+          height 0.03
+          radius 0.05
+        }
+        physics Physics {
+          density -1
+          mass 0.05
+        }
+      }
+    }
+
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.11 0.105 -0.05
+      }
+      device [
+        RotationalMotor {
+          name "rear_left_motor"
+          maxVelocity 20
+          maxTorque 5
+        }
+        PositionSensor {
+          name "rear_left_wheel_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.11 0.105 -0.05
+        rotation 1 0 0 1.57079632679
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.03 0.03 0.03
+              roughness 0.8
+            }
+            geometry Cylinder {
+              height 0.03
+              radius 0.05
+            }
+          }
+        ]
+        name "rear_left_wheel"
+        boundingObject Cylinder {
+          height 0.03
+          radius 0.05
+        }
+        physics Physics {
+          density -1
+          mass 0.05
+        }
+      }
+    }
+
+    # Front-right: axis 1 steers around Z, axis 2 rolls around Y.
+    Hinge2Joint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        anchor 0.11 -0.105 -0.05
+      }
+      jointParameters2 JointParameters {
+        axis 0 1 0
+      }
+      device [
+        RotationalMotor {
+          name "front_right_steer"
+          maxVelocity 4
+          minPosition -0.6
+          maxPosition 0.6
+          maxTorque 2
+        }
+        PositionSensor {
+          name "front_right_steer_sensor"
+        }
+      ]
+      device2 [
+        RotationalMotor {
+          name "front_right_motor"
+          maxVelocity 20
+          maxTorque 5
+        }
+        PositionSensor {
+          name "front_right_wheel_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation 0.11 -0.105 -0.05
+        rotation 1 0 0 1.57079632679
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.03 0.03 0.03
+              roughness 0.8
+            }
+            geometry Cylinder {
+              height 0.03
+              radius 0.05
+            }
+          }
+        ]
+        name "front_right_wheel"
+        boundingObject Cylinder {
+          height 0.03
+          radius 0.05
+        }
+        physics Physics {
+          density -1
+          mass 0.05
+        }
+      }
+    }
+
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -0.11 -0.105 -0.05
+      }
+      device [
+        RotationalMotor {
+          name "rear_right_motor"
+          maxVelocity 20
+          maxTorque 5
+        }
+        PositionSensor {
+          name "rear_right_wheel_sensor"
+        }
+      ]
+      endPoint Solid {
+        translation -0.11 -0.105 -0.05
+        rotation 1 0 0 1.57079632679
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.03 0.03 0.03
+              roughness 0.8
+            }
+            geometry Cylinder {
+              height 0.03
+              radius 0.05
+            }
+          }
+        ]
+        name "rear_right_wheel"
+        boundingObject Cylinder {
+          height 0.03
+          radius 0.05
+        }
+        physics Physics {
+          density -1
+          mass 0.05
+        }
+      }
+    }
+
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.1 0.3 0.8
+        roughness 0.5
+      }
+      geometry Box {
+        size 0.3 0.18 0.06
+      }
+    }
+  ]
+  name "RC_CAR"
+  boundingObject Box {
+    size 0.3 0.18 0.06
+  }
+  physics Physics {
+    density -1
+    mass 0.8
+  }
+  controller "rc_ackermann_keyboard"
+}

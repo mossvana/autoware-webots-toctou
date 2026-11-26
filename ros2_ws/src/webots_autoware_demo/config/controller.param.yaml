@@ -1,0 +1,12 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    ctrl_period: 0.03
+    timeout_thr_sec: 0.5
+    cyclic_message_timeout_thr_sec: 0.9
+    lateral_controller_mode: "mpc"
+    longitudinal_controller_mode: "pid"
+    trajectory_reference_mode: "spatial"
+    enable_control_cmd_horizon_pub: false
+    ego_nearest_dist_threshold: 3.0
+    ego_nearest_yaw_threshold: 1.046

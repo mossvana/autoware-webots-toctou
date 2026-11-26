@@ -1,0 +1,19 @@
+build/
+install/
+log/
+log-*/
+.ros/
+
+# Imported by dependencies/autoware.repos
+ros2_ws/src/core/
+ros2_ws/src/universe/
+
+__pycache__/
+*.pyc
+
+*.wbproj
+.vscode/
+.idea/
+
+results/generated/
+logs/

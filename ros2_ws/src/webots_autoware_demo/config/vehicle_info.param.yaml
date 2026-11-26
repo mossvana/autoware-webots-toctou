@@ -1,0 +1,13 @@
+/**:
+  ros__parameters:
+    # RC카 월드와 rc_ros_bridge.py의 바퀴 치수에 맞춘 값.
+    wheel_radius: 0.05
+    wheel_width: 0.03
+    wheel_base: 0.22
+    wheel_tread: 0.21
+    front_overhang: 0.04
+    rear_overhang: 0.04
+    left_overhang: 0.015
+    right_overhang: 0.015
+    vehicle_height: 0.12
+    max_steer_angle: 0.45

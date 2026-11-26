@@ -1,0 +1,2 @@
+attack_point,configured_hold_count,released_count,min_released_age_ms,max_released_age_ms,out_of_order_count,attack_output_positive_count,gate_output_positive_count,drive_output_positive_count,max_reaccel_speed_mps,max_forward_distance_m,stale_accepted_by_recipient,physical_reacceleration,attack_success
+before_gate,30,30,3744.0,3744.0,1,30,37,37,0.2501,0.2093,True,True,True
