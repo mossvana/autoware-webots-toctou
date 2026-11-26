@@ -1,9 +1,30 @@
-# Autoware-Webots TOCTOU experiment
+# Experiment B: Autoware 안전 계층 환경
 
-Webots RC car와 실제 Autoware Planning, Control, Vehicle Command Gate를
-연결하고, 정지 후 오래된 GO 명령 N개가 늦게 도착했을 때 다시 출발하는지
-검증하는 재현용 저장소입니다. 실험 B용 안전 환경에는 아래 6개 실제
-Autoware 패키지가 추가됩니다.
+이 `experiment-b` 브랜치는 실험 A의 Webots–Autoware 폐루프 환경에 실제
+Autoware 안전 패키지 6개를 추가한 **실험 B용 환경 구성 브랜치**입니다.
+
+> 현재 완료 범위는 sparse checkout, 의존성 설치, 빌드, 설정 및 launch
+> 연결입니다. 실험 B의 공격 실행과 차량 영향 측정은 아직 진행하지 않았습니다.
+
+## 브랜치와 결과 구분
+
+| 브랜치 | 용도 | 상태 |
+| --- | --- | --- |
+| `main` | 실험 A: 안전 계층이 없는 N-command 지연 공격 | 실행 및 결과 검증 완료 |
+| `experiment-b` | 실험 B: 안전 계층을 포함한 구성 | 환경 구성 완료, 공격 실험 미실행 |
+
+B는 A의 주행 환경을 확장하므로 이 브랜치에도 A 코드와 기준 CSV가 포함됩니다.
+하지만 `results/reference`의 결과와 `run_a1.sh`, `run_a2.sh`는 모두
+**실험 A 자료이며 실험 B 결과가 아닙니다.**
+
+실험 B에서 확인할 질문은 다음과 같습니다.
+
+```text
+Validator·AEB·MRM·Mode Manager가 포함된 안전 구성에서도
+지연된 과거 GO 명령이 실제 차량에 영향을 주는가?
+```
+
+추가된 실제 Autoware 패키지는 다음과 같습니다.
 
 - `autoware_control_validator`
 - `autoware_autonomous_emergency_braking`
@@ -12,19 +33,9 @@ Autoware 패키지가 추가됩니다.
 - `autoware_mrm_handler`
 - `autoware_mrm_emergency_stop_operator`
 
-```text
-Webots LiDAR / vehicle state
-  -> Autoware Motion Velocity Planner (Obstacle Stop)
-  -> Autoware Trajectory Follower (MPC + PID)
-  -> Autoware Vehicle Command Gate
-  -> Webots vehicle interface
-  -> Webots Ackermann vehicle
-```
-
-두 공격 지점을 제공합니다.
-
-- A-1 `Controller -> Gate`: Gate의 stale/out-of-order 처리 검증
-- A-2 `Gate -> Vehicle Interface`: Vehicle Interface의 freshness 처리 검증
+각 패키지는 수정한 모사 코드가 아니라 고정된 Autoware 원본 소스를 그대로
+빌드합니다. 이 저장소는 Webots 연결, RC 차량 파라미터, diagnostic graph와
+ROS 2 토픽 remap을 제공합니다.
 
 ## 1. 준비할 환경
 
@@ -33,7 +44,7 @@ Webots LiDAR / vehicle state
 - Ubuntu 24.04 LTS, x86_64
 - ROS 2 Jazzy (`/opt/ros/jazzy`)
 - Webots R2025a (`webots`가 `PATH`에 있어야 함)
-- Git, vcstool, rosdep, colcon
+- Git, rosdep, colcon
 
 > Ubuntu 24.02가 아니라 **Ubuntu 24.04 LTS**입니다.
 
@@ -57,8 +68,17 @@ Webots R2025a와 ROS 2 Jazzy 설치를 마친 뒤 환경을 확인합니다.
 ## 2. 저장소 받기
 
 ```bash
-git clone https://github.com/mossvana/autoware-webots-toctou.git
+git clone -b experiment-b \
+  https://github.com/mossvana/autoware-webots-toctou.git
 cd autoware-webots-toctou
+```
+
+이미 저장소를 받은 팀원은 다음처럼 전환합니다.
+
+```bash
+git fetch origin
+git switch experiment-b
+git pull --ff-only
 ```
 
 ## 3. 동일한 Autoware 소스 준비
@@ -112,65 +132,44 @@ Control Validator + AEB
 이번 구성 작업은 패키지 설치·빌드·기동 연결까지를 범위로 하며, 실험 B의
 공격 실행과 결과 판정은 포함하지 않습니다.
 
-## 5. A-1 실행
+## 실험 B 상태
 
-다른 Webots와 ROS 실험을 모두 종료한 뒤 실행합니다.
+현재 다음 항목까지 확인했습니다.
 
-```bash
-./scripts/run_a1.sh
-```
+- 필요한 Autoware 소스만 sparse checkout
+- 안전 패키지 6개와 의존 패키지 빌드
+- 데모 단위 테스트 `2 tests, 0 failures`
+- 안전 launch 파일의 설치와 인자 파싱
+- 6개 패키지의 ROS 2 패키지 인덱스 등록
 
-결과:
-
-```text
-results/generated/a1_before_gate.csv
-logs/webots_before_gate.log
-logs/ros_before_gate.log
-```
-
-## 6. A-2 실행
-
-A-1이 완전히 종료된 뒤 실행합니다.
+차량을 움직이지 않고 launch 구성을 확인하려면 다음을 실행합니다.
 
 ```bash
-./scripts/run_a2.sh
+source /opt/ros/jazzy/setup.bash
+source ros2_ws/install/setup.bash
+ros2 launch webots_autoware_demo n_command_attack_safety.launch.py --show-args
 ```
 
-결과:
+아직 B-1/B-2 공격 실행, 안전 계층의 실제 개입 여부, 차량 재가속 거리와 같은
+결과는 측정하지 않았습니다. 따라서 이 브랜치에는 B 결과표나 B 기준 CSV가
+없습니다.
+
+## 상속된 실험 A 자료
+
+다음 파일은 A 환경을 기준선으로 보존하기 위해 남아 있습니다.
 
 ```text
-results/generated/a2_after_gate.csv
-logs/webots_after_gate.log
-logs/ros_after_gate.log
+scripts/run_a1.sh
+scripts/run_a2.sh
+scripts/run_experiment.sh
+results/reference/a1_before_gate.csv
+results/reference/a2_after_gate.csv
 ```
 
-스크립트는 실험마다 Webots를 새로 시작하고, `/clock`을 기다린 다음 ROS 2
-launch를 실행합니다. 실험 종료 시 Webots와 ROS 프로세스도 정리합니다.
-
-## 7. 재현 성공 판정
-
-실행 스크립트가 자동으로 다음 조건을 검사합니다.
-
-```text
-released_count == 30
-min_released_age_ms > 100
-out_of_order_count >= 1
-stale_accepted_by_recipient == True
-physical_reacceleration == True
-max_forward_distance_m > 0.01
-attack_success == True
-```
-
-최초 검증 결과:
-
-| 실험 | 명령 나이 | 순서 역전 | 정지 후 최고속도 | 추가 전진 | 결과 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| A-1 | 3744 ms | 1 | 0.2501 m/s | 0.2093 m | reproduced |
-| A-2 | 3744 ms | 1 | 0.2501 m/s | 0.1703 m | reproduced |
-
-기준 CSV는 `results/reference`에 있습니다. ROS 스케줄링과 PC 성능 때문에
-이동거리는 약간 달라질 수 있습니다. 표의 숫자와 완전히 같아야 하는 것이
-아니라 자동 판정 조건을 모두 통과하면 재현 성공입니다.
+이 파일을 실행하면 안전 패키지 6개가 포함된 B가 아니라 기존 A launch가
+실행됩니다. A의 `0.2501 m/s`, `0.2093 m`, `0.1703 m` 등의 수치를 B 결과로
+인용하면 안 됩니다. B용 실행 절차와 결과 CSV는 실제 B 실험 이후 별도로
+추가해야 합니다.
 
 ## 재현 범위
 
