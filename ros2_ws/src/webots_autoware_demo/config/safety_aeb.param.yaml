@@ -1,0 +1,47 @@
+/**:
+  ros__parameters:
+    use_predicted_trajectory: true
+    use_imu_path: true
+    limit_imu_path_lat_dev: false
+    limit_imu_path_length: true
+    use_pointcloud_data: true
+    use_predicted_object_data: false
+    use_object_velocity_calculation: false
+    # This reduced demo does not run the AutowareState monitor. Operation mode
+    # is still managed and checked by Control Validator and the Gate.
+    check_autoware_state: false
+
+    imu_path_lat_dev_threshold: 0.25
+    min_generated_imu_path_length: 0.20
+    max_generated_imu_path_length: 2.0
+    imu_prediction_time_horizon: 2.0
+    imu_prediction_time_interval: 0.05
+    mpc_prediction_time_horizon: 2.0
+    mpc_prediction_time_interval: 0.05
+
+    publish_debug_pointcloud: true
+    publish_debug_markers: true
+
+    detection_range_min_height: -0.02
+    detection_range_max_height_margin: 0.05
+    voxel_grid_x: 0.02
+    voxel_grid_y: 0.02
+    voxel_grid_z: 0.05
+
+    expand_width: 0.0
+    path_footprint_extra_margin: 0.02
+    speed_calculation_expansion_margin: 0.05
+
+    cluster_tolerance: 0.08
+    cluster_minimum_height: 0.01
+    minimum_cluster_size: 3
+    maximum_cluster_size: 1000
+
+    longitudinal_offset_margin: 0.05
+    t_response: 0.20
+    a_ego_min: -1.0
+    a_obj_min: -1.0
+    collision_keeping_sec: 3.0
+    previous_obstacle_keep_time: 1.0
+    aeb_hz: 20.0
+

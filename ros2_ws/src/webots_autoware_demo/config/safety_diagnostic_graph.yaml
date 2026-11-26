@@ -1,0 +1,64 @@
+units:
+  - path: /safety/aeb
+    type: diag
+    node: autonomous_emergency_braking
+    name: aeb_emergency_stop
+
+  - path: /safety/control/max_distance_deviation
+    type: diag
+    node: control_validator
+    name: control_validation_max_distance_deviation
+
+  - path: /safety/control/over_velocity
+    type: diag
+    node: control_validator
+    name: control_validation_over_velocity
+
+  - path: /safety/control/overrun_stop_point
+    type: diag
+    node: control_validator
+    name: control_validation_overrun_stop_point
+
+  - path: /safety/control/will_overrun_stop_point
+    type: diag
+    node: control_validator
+    name: control_validation_will_overrun_stop_point
+
+  - path: /safety/control/latency
+    type: diag
+    node: control_validator
+    name: control_validation_latency
+
+  - path: /autoware/modes/stop
+    type: ok
+
+  - path: /autoware/modes/autonomous
+    type: and
+    list:
+      - { type: link, link: /safety/aeb }
+      - { type: link, link: /safety/control/max_distance_deviation }
+      - { type: link, link: /safety/control/over_velocity }
+      - { type: link, link: /safety/control/overrun_stop_point }
+      - { type: link, link: /safety/control/will_overrun_stop_point }
+      - { type: link, link: /safety/control/latency }
+
+  - path: /autoware/modes/autonomous/available
+    type: and
+    list:
+      - { type: link, link: /autoware/modes/autonomous }
+
+  - path: /autoware/modes/local
+    type: error
+
+  - path: /autoware/modes/remote
+    type: error
+
+  - path: /autoware/modes/emergency_stop
+    type: ok
+
+  - path: /autoware/modes/comfortable_stop
+    type: error
+
+  - path: /autoware/modes/pull_over
+    type: error
+

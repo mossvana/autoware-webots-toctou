@@ -2,7 +2,15 @@
 
 Webots RC car와 실제 Autoware Planning, Control, Vehicle Command Gate를
 연결하고, 정지 후 오래된 GO 명령 N개가 늦게 도착했을 때 다시 출발하는지
-검증하는 재현용 저장소입니다.
+검증하는 재현용 저장소입니다. 실험 B용 안전 환경에는 아래 6개 실제
+Autoware 패키지가 추가됩니다.
+
+- `autoware_control_validator`
+- `autoware_autonomous_emergency_braking`
+- `autoware_operation_mode_transition_manager`
+- `autoware_diagnostic_graph_aggregator`
+- `autoware_mrm_handler`
+- `autoware_mrm_emergency_stop_operator`
 
 ```text
 Webots LiDAR / vehicle state
@@ -34,7 +42,7 @@ Webots LiDAR / vehicle state
 ```bash
 sudo apt update
 sudo apt install -y \
-  git python3-vcstool python3-rosdep python3-colcon-common-extensions
+  git python3-rosdep python3-colcon-common-extensions
 
 # 이 PC에서 rosdep을 처음 사용하는 경우에만 실행
 sudo rosdep init
@@ -56,7 +64,9 @@ cd autoware-webots-toctou
 ## 3. 동일한 Autoware 소스 준비
 
 `dependencies/autoware.repos`에는 최초 실험에 사용한 정확한 Git 커밋이
-고정되어 있습니다.
+고정되어 있습니다. 설치 스크립트는 Autoware 전체를 받지 않습니다. 기존
+Planning/Control/Gate, 위 안전 패키지 6개, 그리고 이들의 소스 의존성만
+Git sparse checkout으로 받습니다.
 
 ```bash
 ./scripts/setup_workspace.sh
@@ -64,7 +74,7 @@ cd autoware-webots-toctou
 
 이 명령은 다음 작업을 수행합니다.
 
-1. 고정된 Autoware Core/Universe/메시지 저장소를 `ros2_ws/src`에 가져옴
+1. 고정된 Autoware Core/Universe/메시지 저장소에서 필요한 경로만 가져옴
 2. `rosdep`으로 나머지 시스템 의존성 설치
 
 ## 4. 빌드와 단위 테스트
@@ -75,6 +85,32 @@ cd autoware-webots-toctou
 
 전체 Autoware가 아니라 이 실험 패키지까지 필요한 의존 패키지만 빌드합니다.
 기준 단위 테스트 결과는 `2 tests, 0 failures`입니다.
+
+빌드 마지막에는 6개 안전 패키지의 설치 여부와 고정 커밋 및 sparse 경로를
+자동 검사합니다. 이미 빌드한 환경만 다시 검사하려면 다음을 실행합니다.
+
+```bash
+./scripts/verify_safety_environment.sh
+```
+
+## 실험 B 안전 파이프라인
+
+환경에는 다음 연결 설정도 포함되어 있습니다.
+
+```text
+Control Validator + AEB
+  -> Diagnostic Graph
+  -> Operation Mode Availability
+  -> MRM Handler
+  -> MRM Emergency Stop Operator
+  -> Vehicle Command Gate emergency input
+  -> Webots vehicle interface
+```
+
+관련 launch 파일은
+`ros2_ws/src/webots_autoware_demo/launch/n_command_attack_safety.launch.py`입니다.
+이번 구성 작업은 패키지 설치·빌드·기동 연결까지를 범위로 하며, 실험 B의
+공격 실행과 결과 판정은 포함하지 않습니다.
 
 ## 5. A-1 실행
 

@@ -1,0 +1,37 @@
+/**:
+  ros__parameters:
+    diag_error_count_threshold: 1
+    display_on_terminal: false
+    vel_lpf_gain: 0.9
+
+    acceleration_validator:
+      acc_error_offset: 0.5
+      acc_error_scale: 0.2
+      acc_lpf_gain: 0.97
+
+    latency_validator:
+      nominal_latency: 0.20
+
+    lateral_jerk_validator:
+      lateral_jerk: 10.0
+
+    overrun_validator:
+      assumed_delay_time: 0.10
+      assumed_limit_acc: 1.0
+      overrun_stop_point_dist: 0.03
+      will_overrun_stop_point_dist: 0.10
+
+    trajectory_validator:
+      max_distance_deviation: 0.15
+
+    velocity_validator:
+      hold_velocity_error_until_stop: true
+      rolling_back_velocity: 0.05
+      over_velocity_offset: 0.05
+      over_velocity_ratio: 0.20
+      vel_lpf_gain: 0.90
+
+    yaw_validator:
+      yaw_deviation_error: 0.50
+      yaw_deviation_warn: 0.25
+

@@ -4,11 +4,15 @@ from pathlib import Path
 
 import rclpy
 from ackermann_msgs.msg import AckermannDriveStamped
+from autoware_adapi_v1_msgs.msg import MrmState
 from autoware_control_msgs.msg import Control
 from autoware_vehicle_msgs.msg import VelocityReport
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from std_msgs.msg import String
+from tier4_system_msgs.msg import OperationModeAvailability
+from tier4_vehicle_msgs.msg import VehicleEmergencyStamped
 
 
 class NCommandEvaluator(Node):
@@ -49,6 +53,15 @@ class NCommandEvaluator(Node):
         self.released_ages_ms = []
         self.last_attack_stamp_ns = None
         self.out_of_order_count = 0
+        self.aeb_error_before_attack = False
+        self.aeb_error_after_attack = False
+        self.validator_error_before_attack = False
+        self.validator_error_after_attack = False
+        self.autonomous_unavailable_after_attack = False
+        self.mrm_emergency_before_attack = False
+        self.mrm_emergency_after_attack = False
+        self.emergency_control_count = 0
+        self.gate_emergency_after_attack = False
         self.done = False
 
         self.create_subscription(
@@ -68,6 +81,30 @@ class NCommandEvaluator(Node):
         )
         self.create_subscription(
             Odometry, "/localization/kinematic_state", self.on_odometry, 10
+        )
+        self.create_subscription(
+            DiagnosticArray, "/diagnostics", self.on_diagnostics, 100
+        )
+        self.create_subscription(
+            OperationModeAvailability,
+            "/system/operation_mode/availability",
+            self.on_availability,
+            10,
+        )
+        self.create_subscription(
+            MrmState, "/system/fail_safe/mrm_state", self.on_mrm_state, 10
+        )
+        self.create_subscription(
+            Control,
+            "/system/emergency/control_cmd",
+            self.on_emergency_control,
+            100,
+        )
+        self.create_subscription(
+            VehicleEmergencyStamped,
+            "/control/command/vehicle_emergency",
+            self.on_gate_emergency,
+            10,
         )
         self.result_pub = self.create_publisher(
             String, "/experiment/n_command_result", 10
@@ -129,6 +166,46 @@ class NCommandEvaluator(Node):
                 self.max_forward_distance_m, self.latest_x - self.start_x
             )
 
+    def on_diagnostics(self, msg):
+        for status in msg.status:
+            if status.level < DiagnosticStatus.ERROR:
+                continue
+            if "aeb_emergency_stop" in status.name:
+                if self.release_started:
+                    self.aeb_error_after_attack = True
+                else:
+                    self.aeb_error_before_attack = True
+            if "control_validation_" in status.name:
+                if self.release_started:
+                    self.validator_error_after_attack = True
+                else:
+                    self.validator_error_before_attack = True
+
+    def on_availability(self, msg):
+        if self.release_started and not msg.autonomous:
+            self.autonomous_unavailable_after_attack = True
+
+    def on_mrm_state(self, msg):
+        is_emergency = (
+            msg.behavior == MrmState.EMERGENCY_STOP
+            and msg.state
+            in (MrmState.MRM_OPERATING, MrmState.MRM_SUCCEEDED, MrmState.MRM_FAILED)
+        )
+        if not is_emergency:
+            return
+        if self.release_started:
+            self.mrm_emergency_after_attack = True
+        else:
+            self.mrm_emergency_before_attack = True
+
+    def on_emergency_control(self, _msg):
+        if self.in_attack_window():
+            self.emergency_control_count += 1
+
+    def on_gate_emergency(self, msg):
+        if self.in_attack_window() and msg.emergency:
+            self.gate_emergency_after_attack = True
+
     def evaluate(self):
         if self.done or self.release_end_ns is None:
             return
@@ -145,6 +222,23 @@ class NCommandEvaluator(Node):
             self.max_speed_mps > self.velocity_threshold
             and self.max_forward_distance_m > self.movement_threshold
         )
+        safety_pretrigger = (
+            self.aeb_error_before_attack
+            or self.validator_error_before_attack
+            or self.mrm_emergency_before_attack
+        )
+        if safety_pretrigger:
+            safety_outcome = "INVALID_PRETRIGGER"
+        elif not physical_reacceleration:
+            safety_outcome = "MITIGATED"
+        elif self.attack_point == "after_gate" and self.gate_emergency_after_attack:
+            safety_outcome = "BYPASSED_AFTER_GATE"
+        elif self.mrm_emergency_after_attack:
+            safety_outcome = "MRM_ACTIVATED_WITH_IMPACT"
+        elif self.aeb_error_after_attack or self.validator_error_after_attack:
+            safety_outcome = "DETECTED_ONLY"
+        else:
+            safety_outcome = "NOT_DETECTED"
         row = {
             "attack_point": self.attack_point,
             "configured_hold_count": self.hold_count,
@@ -160,6 +254,16 @@ class NCommandEvaluator(Node):
             "stale_accepted_by_recipient": stale_accepted,
             "physical_reacceleration": physical_reacceleration,
             "attack_success": stale_accepted and physical_reacceleration,
+            "aeb_error_before_attack": self.aeb_error_before_attack,
+            "aeb_error_after_attack": self.aeb_error_after_attack,
+            "validator_error_before_attack": self.validator_error_before_attack,
+            "validator_error_after_attack": self.validator_error_after_attack,
+            "autonomous_unavailable_after_attack": self.autonomous_unavailable_after_attack,
+            "mrm_emergency_before_attack": self.mrm_emergency_before_attack,
+            "mrm_emergency_after_attack": self.mrm_emergency_after_attack,
+            "emergency_control_count": self.emergency_control_count,
+            "gate_emergency_after_attack": self.gate_emergency_after_attack,
+            "safety_outcome": safety_outcome,
         }
         output = Path(self.result_csv).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)

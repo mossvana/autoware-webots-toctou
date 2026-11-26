@@ -10,23 +10,33 @@
   <exec_depend>ackermann_msgs</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>autoware_adapi_v1_msgs</exec_depend>
+  <exec_depend>autoware_autonomous_emergency_braking</exec_depend>
   <exec_depend>autoware_control_msgs</exec_depend>
+  <exec_depend>autoware_control_validator</exec_depend>
+  <exec_depend>autoware_diagnostic_graph_aggregator</exec_depend>
   <exec_depend>autoware_map_loader</exec_depend>
   <exec_depend>autoware_map_projection_loader</exec_depend>
   <exec_depend>autoware_motion_velocity_obstacle_stop_module</exec_depend>
   <exec_depend>autoware_motion_velocity_planner</exec_depend>
   <exec_depend>autoware_mpc_lateral_controller</exec_depend>
+  <exec_depend>autoware_mrm_emergency_stop_operator</exec_depend>
+  <exec_depend>autoware_mrm_handler</exec_depend>
+  <exec_depend>autoware_operation_mode_transition_manager</exec_depend>
   <exec_depend>autoware_pid_longitudinal_controller</exec_depend>
   <exec_depend>autoware_trajectory_follower_node</exec_depend>
   <exec_depend>autoware_velocity_smoother</exec_depend>
   <exec_depend>autoware_vehicle_cmd_gate</exec_depend>
   <exec_depend>autoware_planning_msgs</exec_depend>
   <exec_depend>autoware_perception_msgs</exec_depend>
+  <exec_depend>autoware_system_msgs</exec_depend>
   <exec_depend>autoware_vehicle_msgs</exec_depend>
+  <exec_depend>diagnostic_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>sensor_msgs_py</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>tier4_system_msgs</exec_depend>
+  <exec_depend>tier4_vehicle_msgs</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>rclcpp_components</exec_depend>

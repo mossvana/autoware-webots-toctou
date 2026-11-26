@@ -30,8 +30,12 @@ class VehicleAdapter(Node):
             "control_topic", "/control/trajectory_follower/control_cmd"
         )
         self.declare_parameter("publish_demo_engage", False)
+        self.declare_parameter("publish_demo_operation_mode", True)
         control_topic = self.get_parameter("control_topic").value
         publish_demo_engage = self.get_parameter("publish_demo_engage").value
+        publish_demo_operation_mode = self.get_parameter(
+            "publish_demo_operation_mode"
+        ).value
         self.latest_odom = None
         self.latest_steer = 0.0
         self.current_gear = None
@@ -57,10 +61,14 @@ class VehicleAdapter(Node):
             reliability=ReliabilityPolicy.RELIABLE,
             durability=DurabilityPolicy.TRANSIENT_LOCAL,
         )
-        self.operation_mode_pub = self.create_publisher(
-            OperationModeState,
-            "/system/operation_mode/state",
-            operation_mode_qos,
+        self.operation_mode_pub = (
+            self.create_publisher(
+                OperationModeState,
+                "/system/operation_mode/state",
+                operation_mode_qos,
+            )
+            if publish_demo_operation_mode
+            else None
         )
         self.engage_pub = (
             self.create_publisher(Engage, "/autoware/engage", operation_mode_qos)
@@ -158,16 +166,17 @@ class VehicleAdapter(Node):
         control_mode.mode = ControlModeReport.AUTONOMOUS
         self.control_mode_pub.publish(control_mode)
 
-        operation_mode = OperationModeState()
-        operation_mode.stamp = now
-        operation_mode.mode = OperationModeState.AUTONOMOUS
-        operation_mode.is_autoware_control_enabled = True
-        operation_mode.is_in_transition = False
-        operation_mode.is_stop_mode_available = True
-        operation_mode.is_autonomous_mode_available = True
-        operation_mode.is_local_mode_available = False
-        operation_mode.is_remote_mode_available = False
-        self.operation_mode_pub.publish(operation_mode)
+        if self.operation_mode_pub is not None:
+            operation_mode = OperationModeState()
+            operation_mode.stamp = now
+            operation_mode.mode = OperationModeState.AUTONOMOUS
+            operation_mode.is_autoware_control_enabled = True
+            operation_mode.is_in_transition = False
+            operation_mode.is_stop_mode_available = True
+            operation_mode.is_autonomous_mode_available = True
+            operation_mode.is_local_mode_available = False
+            operation_mode.is_remote_mode_available = False
+            self.operation_mode_pub.publish(operation_mode)
 
         if self.engage_pub is not None:
             engage = Engage()

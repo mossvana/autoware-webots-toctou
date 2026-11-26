@@ -32,6 +32,7 @@ setup(
             "trajectory_probe = webots_autoware_demo.trajectory_probe:main",
             "n_command_delay = webots_autoware_demo.n_command_delay:main",
             "n_command_evaluator = webots_autoware_demo.n_command_evaluator:main",
+            "safety_mode_bootstrap = webots_autoware_demo.safety_mode_bootstrap:main",
             ],
     },
 )
